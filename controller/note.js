@@ -1,6 +1,6 @@
 const Note = require("../model/Note")
 const { NotFoundError } = require("../errors")
-const Book = require("../model/Book")
+const Book = require("../model/Library")
 
 // validateBook middleware validated <userId, bookId>
 // now i can simply return the notes that come under the <bookId> --- bullshit

@@ -1,6 +1,6 @@
 const express = require("express")
 const router = express.Router()
-const validateBook = require("../middleware/validate-book.js")
+const validateLibrary = require("../middleware/validate-Library.js")
 
 const {
   getAllNotes,
@@ -11,13 +11,13 @@ const {
 } = require("../controller/note")
 
 router
-  .route("/:bookId/notes")
-  .get(validateBook, getAllNotes)
-  .post(validateBook, createNote)
+  .route("/:LibraryId/notes")
+  .get(validateLibrary, getAllNotes)
+  .post(validateLibrary, createNote)
 router
-  .route("/:bookId/notes/:noteId")
-  .get(validateBook, getNote)
-  .delete(validateBook, deleteNote)
-  .patch(validateBook, updateNote)
+  .route("/:LibraryId/notes/:noteId")
+  .get(validateLibrary, getNote)
+  .delete(validateLibrary, deleteNote)
+  .patch(validateLibrary, updateNote)
 
 module.exports = router

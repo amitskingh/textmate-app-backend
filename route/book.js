@@ -1,9 +1,9 @@
 const express = require("express")
 const router = express.Router()
 
-const { getAllBooks, createBook, deleteBook } = require("../controller/book")
+const { getAllLibrary, createLibrary, deleteLibrary } = require("../controller/Library")
 
-router.route("/").get(getAllBooks).post(createBook)
-router.route("/:bookId").delete(deleteBook)
+router.route("/").get(getAllLibrary).post(createLibrary)
+router.route("/:LibraryId").delete(deleteLibrary)
 
 module.exports = router
