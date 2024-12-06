@@ -1,6 +1,5 @@
 const express = require("express")
 const router = express.Router()
-const validateLibrary = require("../middleware/validate-Library.js")
 
 const {
   getAllNotes,
@@ -10,14 +9,11 @@ const {
   updateNote,
 } = require("../controller/note")
 
-router
-  .route("/:LibraryId/notes")
-  .get(validateLibrary, getAllNotes)
-  .post(validateLibrary, createNote)
+router.route("/:LibraryId/notes").get(getAllNotes).post(createNote)
 router
   .route("/:LibraryId/notes/:noteId")
-  .get(validateLibrary, getNote)
-  .delete(validateLibrary, deleteNote)
-  .patch(validateLibrary, updateNote)
+  .get(getNote)
+  .delete(deleteNote)
+  .patch(updateNote)
 
 module.exports = router

@@ -1,43 +1,101 @@
-const Book = require("../model/Book")
+const Library = require("../model/Library")
 const Note = require("../model/Note")
-const { NotFoundError } = require("../errors")
+const catchAsync = require("../middleware/catchAsync")
+const AppError = require("../utils/AppError")
+const mongoose = require("mongoose")
 
-// retuning the book that comes under the userId
-const getAllBooks = async (req, res) => {
+// retuning the library that comes under the userId
+const getAllLibrary = catchAsync(async (req, res, next) => {
   const { userId } = req.user
-  // console.log(userId)
 
-  const books = await Book.find({ createdBy: userId })
-  res.status(200).json(books)
-}
+  const libraries = await Library.find({ createdBy: userId })
 
-// creating book under the hood of current active user
-const createBook = async (req, res) => {
+  if (!libraries || libraries.length === 0) {
+    return next(new AppError("No libraries found for this user", 404))
+  }
+
+  res.status(200).json({
+    message: "Libraries retrieved successfully",
+    data: libraries,
+  })
+})
+
+// creating library under the hood of current active user
+const createLibrary = catchAsync(async (req, res, next) => {
   const { userId } = req.user
-  const { subject } = req.body
-  const book = await Book.create({ subject: subject, createdBy: userId })
+  const { libraryName } = req.body
 
-  res.status(201).json({ book })
-}
-
-// deleting book by validating key pair <userId, bookId>
-// some user might try to manipulate the data of other user if they know <bookId> of other user
-// to avoid that i got to take care that the <bookId> come under the hood of <userId>
-const deleteBook = async (req, res) => {
-  const { bookId } = req.params
-  const { userId } = req.user
-  const book = await Book.findOneAndDelete({
-    _id: bookId,
+  const library = await Library.create({
+    libraryName: libraryName,
     createdBy: userId,
   })
 
-  if (!book) {
-    throw new NotFoundError(`No book found with id${userId}`)
+  // Validate the input
+  if (
+    !libraryName ||
+    libraryName.trim().length < 1 ||
+    libraryName.trim().length > 50
+  ) {
+    return next(
+      new AppError(
+        "Library name is required and must be at least 1 and at most 50 characters long",
+        400
+      )
+    )
   }
 
-  const notes = await Note.deleteMany({ createdUnder: bookId })
+  res.status(201).json({
+    status: "success",
+    message: "Library created successfully",
+    data: library,
+  })
+})
 
-  res.status(200).json(book)
-}
+// Following need to be considered
+// 1. Atomicity --> why if the book is deleted but not notes then we need to roollback
+// 2. Validation of libraryId
+const deleteLibrary = catchAsync(async (req, res, next) => {
+  const { libraryId } = req.params
+  const { userId } = req.user
 
-module.exports = { getAllBooks, createBook, deleteBook }
+  // Validate libraryId
+  if (!mongoose.Types.ObjectId.isValid(libraryId)) {
+    return next(new AppError("Invalid library ID", 400))
+  }
+
+  const session = await mongoose.startSession()
+  session.startTransaction()
+
+  try {
+    // Delete the library
+    const library = await Library.findOneAndDelete({
+      _id: libraryId,
+      createdBy: userId,
+    }).session(session)
+
+    if (!library) {
+      throw new AppError("Library does not exist", 400)
+    }
+
+    // Delete associated notes
+    await Note.deleteMany({ libraryId: libraryId }).session(session)
+
+    // commit transaction
+    await session.commitTransaction()
+
+    session.endSession()
+
+    // Send response
+    res.status(200).json({
+      success: true,
+      message: "Library and associated notes deleted successfully",
+      data: library,
+    })
+  } catch (error) {
+    await session.abortTransaction()
+    session.endSession()
+    next(error)
+  }
+})
+
+module.exports = { getAllLibrary, createLibrary, deleteLibrary }

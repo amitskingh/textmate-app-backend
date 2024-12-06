@@ -6,7 +6,7 @@ const LibrarySchema = new mongoose.Schema(
       type: String,
       trim: true,
       required: [true, "Please provide library name"],
-      minlength: 3,
+      minlength: 1,
       maxlength: 50,
     },
     createdBy: {

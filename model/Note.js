@@ -6,7 +6,8 @@ const NoteSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please provide the note name"],
       trim: true,
-      minlength: 3,
+      minlength: 1,
+      maxlength: 50,
     },
     content: {
       type: String,
