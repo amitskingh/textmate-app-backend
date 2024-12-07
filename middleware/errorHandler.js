@@ -1,12 +1,18 @@
-// errorHandler.js
-const errorHandler = (err, req, res, next) => {
-  const statusCode = err.statusCode || 500
-  const message = err.message || "Something went wrong!"
+const AppError = require("../utils/AppError")
 
-  res.status(statusCode).json({
+const errorHandler = (err, req, res, next) => {
+  // If the error is an instance of AppError, use its properties
+  if (err instanceof AppError) {
+    return res.status(err.statusCode || 500).json({
+      status: "error",
+      message: err.message,
+    })
+  }
+
+  // If the error is not an instance of AppError, handle it as a generic server error
+  return res.status(500).json({
     status: "error",
-    statusCode,
-    message,
+    message: "Something went wrong!",
   })
 }
 

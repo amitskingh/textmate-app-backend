@@ -1,6 +1,6 @@
 const express = require("express")
 const app = express()
-const connectDB = require("./db/connect.js")
+const connectDB = require("./config/db.js")
 require("express-async-errors")
 require("dotenv").config()
 const cors = require("cors")
@@ -8,9 +8,8 @@ const cookieParser = require("cookie-parser")
 const helmet = require("helmet")
 const xss = require("xss-clean")
 
-const ServerError = require("./errors/server-error.js")
-const errorHandlerMiddleware = require("./middleware/error-handler.js")
-const notFoundError = require("./middleware/not-found.js")
+const errorHandlerMiddleware = require("./middleware/errorHandler.js")
+const notFoundMiddleware = require("./middleware/notFound.js")
 
 const corsOptions = {
   origin: `${process.env.FRONTEND_URL}`, // Frontend's URL
@@ -40,20 +39,20 @@ app.use(cookieParser())
 app.use(express.json())
 
 // routes
-const bookRouter = require("./route/book.js")
+const libraryRouter = require("./route/book.js")
 const noteRouter = require("./route/note.js")
 const authRouter = require("./route/auth.js")
 const authenticateUser = require("./middleware/authentication.js")
+const AppError = require("./utils/AppError.js")
 
 app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/profile", authenticateUser, authRouter)
-app.use("/api/v1/books", authenticateUser, bookRouter)
+app.use("/api/v1/books", authenticateUser, libraryRouter)
 app.use("/api/v1/books", authenticateUser, noteRouter)
 
-app.use(notFoundError)
+app.use(notFoundMiddleware)
 app.use(errorHandlerMiddleware)
 
-const port = process.env.PORT || 3000
 const start = async () => {
   try {
     await connectDB(process.env.MONGO_URI)
@@ -61,8 +60,8 @@ const start = async () => {
       console.log(`Server is listening on port ${port}`)
     })
   } catch (error) {
-    throw new ServerError("Server error")
-    // console.log(error)
+    console.error("Server error:", error.message)
+    process.exit(1) // Exit the process with an error code
   }
 }
 

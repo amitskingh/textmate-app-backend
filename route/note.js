@@ -7,6 +7,7 @@ const {
   deleteNote,
   getNote,
   updateNote,
+  renameNote,
 } = require("../controller/note")
 
 router.route("/:librarySlug/notes").get(getAllNotes).post(createNote)
@@ -15,5 +16,6 @@ router
   .get(getNote)
   .delete(deleteNote)
   .patch(updateNote)
+router.route("/:librarySlug/notes/:noteSlug/rename").put(renameNote)
 
 module.exports = router
