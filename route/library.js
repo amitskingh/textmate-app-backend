@@ -6,7 +6,7 @@ import {
   createLibrary,
   deleteLibrary,
   renameLibrary,
-} from "../controller/Library"
+} from "../controller/library.js"
 
 router.route("/").get(getAllLibrary).post(createLibrary)
 router.route("/:librarySlug").delete(deleteLibrary)

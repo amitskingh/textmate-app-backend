@@ -8,7 +8,7 @@ import {
   getNote,
   updateNote,
   renameNote,
-} from "../controller/note"
+} from "../controller/note.js"
 
 router.route("/:librarySlug/notes").get(getAllNotes).post(createNote)
 router

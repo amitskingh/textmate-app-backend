@@ -1,9 +1,9 @@
 import mongoose from "mongoose"
 import slugify from "slugify"
-import Library from "../model/Library"
-import Note from "../model/Note"
-import catchAsync from "../middleware/catchAsync"
-import AppError from "../utils/AppError"
+import Library from "../model/Library.js"
+import Note from "../model/Note.js"
+import catchAsync from "../middleware/catchAsync.js"
+import AppError from "../utils/AppError.js"
 
 // ********************************************************************************************************
 

@@ -1,7 +1,7 @@
-import Note from "../model/Note"
-import Library from "../model/Library"
-import catchAsync from "../middleware/catchAsync"
-import AppError from "../utils/AppError"
+import Note from "../model/Note.js"
+import Library from "../model/Library.js"
+import catchAsync from "../middleware/catchAsync.js"
+import AppError from "../utils/AppError.js"
 
 // ********************************************************************************************************
 

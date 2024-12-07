@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken"
-import catchAsync from "./catchAsync"
-import AppError from "../utils/AppError"
+import catchAsync from "./catchAsync.js"
+import AppError from "../utils/AppError.js"
 
 // Helper function to extract token
 const getToken = (req) => {

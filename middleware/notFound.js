@@ -5,4 +5,4 @@ const notFound = (req, res) => {
   })
 }
 
-export { notFound }
+export default notFound 

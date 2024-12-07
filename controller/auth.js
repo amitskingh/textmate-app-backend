@@ -1,6 +1,6 @@
-import AppError from "../utils/AppError"
-import catchAsync from "../middleware/catchAsync"
-import User from "../model/User"
+import AppError from "../utils/AppError.js"
+import catchAsync from "../middleware/catchAsync.js"
+import User from "../model/User.js"
 
 // *********************************************************************************************************
 

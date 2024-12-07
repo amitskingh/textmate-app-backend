@@ -13,7 +13,7 @@ import errorHandlerMiddleware from "./middleware/errorHandler.js"
 import notFoundMiddleware from "./middleware/notFound.js"
 
 // routes
-import libraryRouter from "./route/book.js"
+import libraryRouter from "./route/library.js"
 import noteRouter from "./route/note.js"
 import authRouter from "./route/auth.js"
 import authenticateUser from "./middleware/authentication.js"
@@ -47,12 +47,13 @@ app.use(express.json())
 
 app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/profile", authenticateUser, authRouter)
-app.use("/api/v1/books", authenticateUser, libraryRouter)
-app.use("/api/v1/books", authenticateUser, noteRouter)
+app.use("/api/v1/library", authenticateUser, libraryRouter)
+app.use("/api/v1/library", authenticateUser, noteRouter)
 
-app.use(notFoundMiddleware)
 app.use(errorHandlerMiddleware)
+app.use(notFoundMiddleware)
 
+const port = process.env.PORT || 5000
 const start = async () => {
   try {
     await connectDB(process.env.MONGO_URI)
