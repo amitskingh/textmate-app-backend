@@ -9,9 +9,9 @@ const {
   updateNote,
 } = require("../controller/note")
 
-router.route("/:LibraryId/notes").get(getAllNotes).post(createNote)
+router.route("/:librarySlug/notes").get(getAllNotes).post(createNote)
 router
-  .route("/:LibraryId/notes/:noteId")
+  .route("/:librarySlug/notes/:noteSlug")
   .get(getNote)
   .delete(deleteNote)
   .patch(updateNote)

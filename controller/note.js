@@ -1,89 +1,281 @@
 const Note = require("../model/Note")
-const { NotFoundError } = require("../errors")
-const Book = require("../model/Library")
+const Library = require("../model/Library")
+const catchAsync = require("../middleware/catchAsync")
+const AppError = require("../utils/AppError")
 
-// validateBook middleware validated <userId, bookId>
-// now i can simply return the notes that come under the <bookId> --- bullshit
-// i got to validate the key pair <booId, noteId>
-// then it will be fine <userId, bookId> --> <booId, noteId> as they both got the bookId as a common unique key
-const getAllNotes = async (req, res) => {
-  const { bookId } = req.params
-  const notes = await Note.find({ createdUnder: bookId })
+// ********************************************************************************************************
 
-  res.status(200).json(notes)
-}
+const getAllNotes = catchAsync(async (req, res, next) => {
+  const { userId } = req.user
+  const { librarySlug } = req.params
 
-// Oh my goodness, this is perfect
-const createNote = async (req, res) => {
-  const { title, content } = req.body
-  const { bookId } = req.params
-
-  const note = await Note.create({ title, content, createdUnder: bookId })
-  res.status(200).json(note)
-}
-
-// validateBook middleware validating <userId, bookId>
-// if validated then key pair <userId, bookId> is valid
-// now i need to validate key pair <bookId, noteId> before returninng the note
-// i cannot use the only <notId> to validate as it does not gurantees that particular note i.e. <noteId> comes under the <bookId>, it might belongs to some other <bookId>
-// The question is that shall i include the <userId> as well in the <NoteSchema> for validation and fileration
-// a big no -- why validateBook is already validating the <userId, bookId> i need to validate the <bookId, notedId>
-// How come to conclusion : let's see <userId, bookId> --> <bookId, notedId> they got a bookId common, oh my goodness! great!
-const getNote = async (req, res) => {
-  const { noteId, bookId } = req.params
-  const note = await Note.findOne({
-    _id: noteId,
-    createdUnder: bookId,
+  // Find the library by slug and userId
+  const library = await Library.findOne({
+    slug: librarySlug,
+    createdBy: userId,
   })
 
-  if (!note) {
-    throw new NotFoundError(`No note with the id ${noteId}`)
+  // If library doesn't exist, return an error
+  if (!library) {
+    return next(new AppError("Library does not exist for this user", 404))
   }
 
-  res.status(200).json(note)
-}
+  // Find notes related to the library and user
+  const notes = await Note.find({ libraryId: library._id, createdBy: userId })
 
-// same as the create note
-const updateNote = async (req, res) => {
-  const { bookId } = req.params
-  const { noteId } = req.params
-  const { title, content } = req.body
+  // Send response with notes data
+  res.status(200).json({
+    status: "success",
+    message: "Notes retrieved successfully",
+    data: notes,
+  })
+})
 
+// ********************************************************************************************************
+
+const getNote = catchAsync(async (req, res) => {
+  const { userId } = req.user
+  const { librarySlug, noteSlug } = req.params
+
+  // Find the library by slug and userId
+  const library = await Library.findOne({
+    slug: librarySlug,
+    createdBy: userId,
+  })
+
+  // If the library does not exist, return an error
+  if (!library) {
+    return next(new AppError("Library does not exist for this user", 404))
+  }
+
+  // Find the note by slug and related to the specific library and user
+  const note = await Note.findOne({
+    slug: noteSlug,
+    libraryId: library._id,
+    createdBy: userId,
+  })
+
+  // If the note doesn't exist, return an error
+  if (!note) {
+    return next(new AppError("Note does not exist for this user", 404))
+  }
+
+  // Send response with the note data
+  res.status(200).json({
+    status: "success",
+    message: "Note retrieved successfully",
+    data: note,
+  })
+})
+
+// ********************************************************************************************************
+
+// Creating a note under a specific library by the current user
+const createNote = catchAsync(async (req, res, next) => {
+  const { userId } = req.user
+  const { noteName } = req.body
+  const { librarySlug } = req.params
+
+  // validate library slug
+  const library = await Library.findOne({
+    slug: librarySlug,
+    createdBy: userId,
+  })
+
+  if (!library) {
+    return next(new AppError("Library does not exist for this user", 404))
+  }
+
+  // Ensure note name uniqueness within the library for the user
+  const existingNote = await Note.findOne({
+    noteName,
+    createdBy: userId,
+    libraryId: library._id,
+  })
+
+  if (existingNote) {
+    return next(
+      new AppError("Note name must be unique within the library", 400)
+    )
+  }
+
+  const note = await Note.create({
+    noteName,
+    libraryId: library._id,
+    createdBy: userId,
+  })
+
+  res.status(201).json({
+    status: "success",
+    message: "Note created successfully",
+    data: note,
+  })
+})
+
+// ********************************************************************************************************
+
+const updateNote = catchAsync(async (req, res, next) => {
+  const { userId } = req.user // Ensure you're getting the userId
+  const { librarySlug, noteSlug } = req.params
+  const { content } = req.body
+
+  // Find the library to ensure it exists and belongs to the current user
+  const library = await Library.findOne({
+    slug: librarySlug,
+    createdBy: userId,
+  })
+
+  if (!library) {
+    return next(new AppError("Library does not exist for this user", 404))
+  }
+
+  // Find and update the note in the specified library
   const note = await Note.findOneAndUpdate(
-    { _id: noteId, createdUnder: bookId },
     {
-      title: title,
-      content: content,
+      slug: noteSlug, // Matching by slug (assuming slug is unique per user and library)
+      libraryId: library._id,
+      createdBy: userId,
     },
     {
-      new: true,
-      runValidators: true,
+      content,
+    },
+    {
+      new: true, // Return the updated note
+      runValidators: true, // Ensure validation on the updated data
     }
-
-    // why do i need to runValidator? as i make compulsory to provide the title that's why
   )
 
   if (!note) {
-    throw new NotFoundError(`No note with the id ${noteId}`)
+    return next(new AppError("Note does not exist or not authorized", 404))
   }
 
-  res.status(200).json({ note })
-}
+  // Send response with the updated note
+  res.status(200).json({
+    status: "success",
+    message: "Note updated successfully",
+    data: note,
+  })
+})
 
-// same as createNote
-const deleteNote = async (req, res) => {
-  const { bookId } = req.params
-  const { noteId } = req.params
-  const note = await Note.findOneAndDelete({
-    _id: noteId,
-    createdUnder: bookId,
+const deleteNote = catchAsync(async (req, res, next) => {
+  const { userId } = req.user
+  const { librarySlug, noteSlug } = req.params
+
+  // Validate library slug
+  const library = await Library.findOne({
+    slug: librarySlug,
+    createdBy: userId,
+  })
+
+  if (!library) {
+    return next(new AppError("Library does not exist for this user", 404))
+  }
+
+  // Validate note by noteSlug and ensure it belongs to the correct user and library
+  const note = await Note.findOne({
+    slug: noteSlug,
+    libraryId: library._id,
+    createdBy: userId,
   })
 
   if (!note) {
-    throw new NotFoundError(`No note with the id ${noteId}`)
+    return next(new AppError("Note does not exits for this user", 404))
   }
 
-  res.status(200).json({ note })
-}
+  // Start a transaction
+  const session = await mongoose.startSession()
+  session.startTransaction()
 
-module.exports = { getAllNotes, createNote, deleteNote, getNote, updateNote }
+  try {
+    // Delete the note by slug, user and library reference
+    const noteToDelete = await Note.findOneAndDelete({
+      slug: noteSlug,
+      createdBy: userId,
+      libraryId: library._id,
+    }).session(session)
+
+    if (!noteToDelete) {
+      throw new AppError("Note deletion failed", 400)
+    }
+
+    // Commit transaction
+    await session.commitTransaction()
+    session.endSession()
+
+    res.status(200).json({
+      status: "success",
+      message: "Note deleted successfully",
+      data: noteToDelete,
+    })
+  } catch (error) {
+    // Rollback if anything fails
+    await session.abortTransaction()
+    session.endSession()
+    next(error)
+  }
+})
+
+// ********************************************************************************************************
+
+const renameNote = catchAsync(async (req, res, next) => {
+  const { userId } = req.user // Ensure you're getting the userId from the authenticated user
+  const { librarySlug, noteSlug } = req.params // Extract librarySlug and noteSlug from the params
+  const { noteName } = req.body // Extract new note name from request body
+
+  // Validate if noteName is provided
+  if (!noteName || noteName.trim().length < 1 || noteName.trim().length > 50) {
+    return next(
+      new AppError(
+        "Note name is required and must be between 1 and 50 characters",
+        400
+      )
+    )
+  }
+
+  // Find the library to ensure it exists and belongs to the current user
+  const library = await Library.findOne({
+    slug: librarySlug,
+    createdBy: userId,
+  })
+
+  if (!library) {
+    return next(new AppError("Library does not exist for this user", 404))
+  }
+
+  // Find the note to ensure it exists in the correct library and is created by the current user
+  const note = await Note.findOne({
+    slug: noteSlug,
+    libraryId: library._id,
+    createdBy: userId,
+  })
+
+  if (!note) {
+    return next(new AppError("Note does not exist or not authorized", 404))
+  }
+
+  // Update the note's name
+  const updatedNote = await Note.findOneAndUpdate(
+    { _id: note._id },
+    { noteName }, // Rename the note
+    {
+      new: true, // Return the updated note
+      runValidators: true, // Ensure validation on the updated data
+    }
+  )
+
+  // Send response with the updated note
+  res.status(200).json({
+    status: "success",
+    message: "Note renamed successfully",
+    data: updatedNote,
+  })
+})
+
+module.exports = {
+  getAllNotes,
+  createNote,
+  deleteNote,
+  getNote,
+  updateNote,
+  renameNote,
+}

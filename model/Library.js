@@ -1,24 +1,41 @@
 const mongoose = require("mongoose")
+const slugify = require("slugify")
 
 const LibrarySchema = new mongoose.Schema(
   {
     libraryName: {
       type: String,
-      trim: true,
       required: [true, "Please provide library name"],
-      minlength: 1,
+      trim: true,
+      minlength: 3,
       maxlength: 50,
+    },
+    slug: {
+      type: String,
+      required: true, // Slug is required for routing
     },
     createdBy: {
       type: mongoose.Types.ObjectId,
-      ref: "User", // Reference to User who owns the library
-      required: [true, "Please provide user"],
+      ref: "User",
+      required: true, // Ensures the library is tied to a user
     },
   },
   { timestamps: true }
 )
 
-// Ensure library names are unique for each user
+// Compound index to ensure libraryName is unique per user
 LibrarySchema.index({ libraryName: 1, createdBy: 1 }, { unique: true })
+
+// Add an index for slug to optimize lookups
+LibrarySchema.index({ slug: 1, createdBy: 1 }, { unique: true })
+
+// Middleware to generate slug before saving
+LibrarySchema.pre("save", function (next) {
+  if (this.isModified("libraryName")) {
+    // If libraryName is modified, generate a new slug
+    this.slug = slugify(this.libraryName, { lower: true, strict: true })
+  }
+  next()
+})
 
 module.exports = mongoose.model("Library", LibrarySchema)
