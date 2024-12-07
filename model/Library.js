@@ -1,5 +1,5 @@
-const mongoose = require("mongoose")
-const slugify = require("slugify")
+import mongoose from "mongoose"
+import slugify from "slugify"
 
 const LibrarySchema = new mongoose.Schema(
   {
@@ -38,4 +38,4 @@ LibrarySchema.pre("save", function (next) {
   next()
 })
 
-module.exports = mongoose.model("Library", LibrarySchema)
+export default mongoose.model("Library", LibrarySchema)

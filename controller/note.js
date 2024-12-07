@@ -1,7 +1,7 @@
-const Note = require("../model/Note")
-const Library = require("../model/Library")
-const catchAsync = require("../middleware/catchAsync")
-const AppError = require("../utils/AppError")
+import Note from "../model/Note"
+import Library from "../model/Library"
+import catchAsync from "../middleware/catchAsync"
+import AppError from "../utils/AppError"
 
 // ********************************************************************************************************
 
@@ -271,11 +271,4 @@ const renameNote = catchAsync(async (req, res, next) => {
   })
 })
 
-module.exports = {
-  getAllNotes,
-  createNote,
-  deleteNote,
-  getNote,
-  updateNote,
-  renameNote,
-}
+export { getAllNotes, createNote, deleteNote, getNote, updateNote, renameNote }

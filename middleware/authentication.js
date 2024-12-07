@@ -1,6 +1,6 @@
-const jwt = require("jsonwebtoken")
-const catchAsync = require("./catchAsync")
-const AppError = require("../utils/AppError")
+import jwt from "jsonwebtoken"
+import catchAsync from "./catchAsync"
+import AppError from "../utils/AppError"
 
 // Helper function to extract token
 const getToken = (req) => {
@@ -34,4 +34,4 @@ const auth = catchAsync(async (req, res, next) => {
   }
 })
 
-module.exports = auth
+export default auth

@@ -1,9 +1,9 @@
-const Library = require("../model/Library")
-const Note = require("../model/Note")
-const catchAsync = require("../middleware/catchAsync")
-const AppError = require("../utils/AppError")
-const mongoose = require("mongoose")
-const slugify = require("slugify")
+import mongoose from "mongoose"
+import slugify from "slugify"
+import Library from "../model/Library"
+import Note from "../model/Note"
+import catchAsync from "../middleware/catchAsync"
+import AppError from "../utils/AppError"
 
 // ********************************************************************************************************
 
@@ -174,4 +174,4 @@ const renameLibrary = catchAsync(async (req, res, next) => {
   })
 })
 
-module.exports = { getAllLibrary, createLibrary, deleteLibrary, renameLibrary }
+export { getAllLibrary, createLibrary, deleteLibrary, renameLibrary }

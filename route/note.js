@@ -1,14 +1,14 @@
-const express = require("express")
+import express from "express"
 const router = express.Router()
 
-const {
+import {
   getAllNotes,
   createNote,
   deleteNote,
   getNote,
   updateNote,
   renameNote,
-} = require("../controller/note")
+} from "../controller/note"
 
 router.route("/:librarySlug/notes").get(getAllNotes).post(createNote)
 router
@@ -18,4 +18,4 @@ router
   .patch(updateNote)
 router.route("/:librarySlug/notes/:noteSlug/rename").put(renameNote)
 
-module.exports = router
+export default router

@@ -1,5 +1,5 @@
-const mongoose = require("mongoose")
-const slugify = require("slugify")
+import mongoose from "mongoose"
+import slugify from "slugify"
 
 const NoteSchema = new mongoose.Schema(
   {
@@ -46,4 +46,4 @@ NoteSchema.pre("save", function (next) {
   next()
 })
 
-module.exports = mongoose.model("Note", NoteSchema)
+export default mongoose.model("Note", NoteSchema)

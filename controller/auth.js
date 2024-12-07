@@ -1,6 +1,6 @@
-const AppError = require("../utils/AppError")
-const catchAsync = require("../middleware/catchAsync")
-const User = require("../model/User")
+import AppError from "../utils/AppError"
+import catchAsync from "../middleware/catchAsync"
+import User from "../model/User"
 
 // *********************************************************************************************************
 
@@ -106,9 +106,4 @@ const profile = (req, res, next) => {
   })
 }
 
-module.exports = {
-  register,
-  login,
-  logout,
-  profile,
-}
+export { register, login, logout, profile }

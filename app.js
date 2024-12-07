@@ -1,15 +1,22 @@
-const express = require("express")
+import express from "express"
 const app = express()
-const connectDB = require("./config/db.js")
-require("express-async-errors")
-require("dotenv").config()
-const cors = require("cors")
-const cookieParser = require("cookie-parser")
-const helmet = require("helmet")
-const xss = require("xss-clean")
+import connectDB from "./config/db.js"
+import "express-async-errors"
+import dotenv from "dotenv"
+dotenv.config()
+import cors from "cors"
+import cookieParser from "cookie-parser"
+import helmet from "helmet"
+import xss from "xss-clean"
 
-const errorHandlerMiddleware = require("./middleware/errorHandler.js")
-const notFoundMiddleware = require("./middleware/notFound.js")
+import errorHandlerMiddleware from "./middleware/errorHandler.js"
+import notFoundMiddleware from "./middleware/notFound.js"
+
+// routes
+import libraryRouter from "./route/book.js"
+import noteRouter from "./route/note.js"
+import authRouter from "./route/auth.js"
+import authenticateUser from "./middleware/authentication.js"
 
 const corsOptions = {
   origin: `${process.env.FRONTEND_URL}`, // Frontend's URL
@@ -37,13 +44,6 @@ app.use(helmet())
 app.use(xss())
 app.use(cookieParser())
 app.use(express.json())
-
-// routes
-const libraryRouter = require("./route/book.js")
-const noteRouter = require("./route/note.js")
-const authRouter = require("./route/auth.js")
-const authenticateUser = require("./middleware/authentication.js")
-const AppError = require("./utils/AppError.js")
 
 app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/profile", authenticateUser, authRouter)
