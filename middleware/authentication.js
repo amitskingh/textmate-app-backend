@@ -15,6 +15,7 @@ const getToken = (req) => {
 const auth = catchAsync(async (req, res, next) => {
   const token = getToken(req)
 
+
   if (!token) {
     return next(new AppError("Access denied. No token provided.", 401))
   }
@@ -22,12 +23,14 @@ const auth = catchAsync(async (req, res, next) => {
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET)
 
+
     // Attach user details to the request object
     req.user = {
       userId: payload.userId,
       name: payload.name,
-      email: payload.email,
     }
+
+
     next()
   } catch (error) {
     return next(new AppError("Access denied. Invalid or expired token.", 401))

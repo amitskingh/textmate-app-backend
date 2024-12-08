@@ -41,7 +41,8 @@ const register = catchAsync(async (req, res, next) => {
   res.status(201).json({
     status: "success",
     message: "User registered successfully",
-    user: { name: user.name },
+    token: token,
+    user: { name: user.name, email: user.email },
   })
 })
 
@@ -75,7 +76,8 @@ const login = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     message: "Login successful",
-    user: { name: user.name },
+    token: token,
+    user: { name: user.name, email: user.email },
   })
 })
 

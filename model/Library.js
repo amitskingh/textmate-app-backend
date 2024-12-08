@@ -7,12 +7,15 @@ const LibrarySchema = new mongoose.Schema(
       type: String,
       required: [true, "Please provide library name"],
       trim: true,
-      minlength: 3,
+      minlength: 1,
       maxlength: 50,
+      match: [
+        /^[a-zA-Z0-9\s]+$/,
+        "Library name can only contain alphabets, numbers, and spaces",
+      ],
     },
     slug: {
       type: String,
-      required: true, // Slug is required for routing
     },
     createdBy: {
       type: mongoose.Types.ObjectId,

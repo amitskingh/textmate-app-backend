@@ -1,8 +1,14 @@
-const connectDB = require("./db/connect")
-require("dotenv").config()
-// const schema = require("./model/Note")
-// const schema = require("./model/User")
-const schema = require("./model/Book")
+import connectDB from "./config/db.js"
+import dotenv from "dotenv"
+dotenv.config()
+
+import User from "./model/User.js"
+import Note from "./model/Note.js"
+import Library from "./model/Library.js"
+
+// const schema = User
+// const schema = Note
+const schema = Library
 
 const start = async () => {
   try {
