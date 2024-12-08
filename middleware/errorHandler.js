@@ -15,10 +15,12 @@ const errorHandler = (err, req, res, next) => {
   //   message: "Something went wrong!",
   // })
   let message = err.message || "Something went wrong"
-  const statusCode = err.statusCode || 500
+  let statusCode = err.statusCode || 400
 
   // Handle Mongoose validation errors
   if (err.name === "ValidationError") {
+    statusCode = 400
+
     message = Object.values(err.errors)
       .map((e) => e.message)
       .join(", ")
@@ -30,9 +32,13 @@ const errorHandler = (err, req, res, next) => {
     message = `Duplicate field value entered for ${
       Object.keys(err.keyValue)[0]
     }. Please choose another value.`
+    statusCode = 400
   }
 
-  return res.status(statusCode).json({
+  console.log(message, statusCode)
+
+  res.status(statusCode).json({
+    statusCode: statusCode,
     status: "error",
     message: message,
   })

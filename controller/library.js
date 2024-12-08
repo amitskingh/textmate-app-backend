@@ -75,8 +75,13 @@ const deleteLibrary = catchAsync(async (req, res, next) => {
   const { librarySlug } = req.params
   const { userId } = req.user
 
+  console.log(librarySlug)
+
   // Validate the librarySlug and find the library
-  const library = await Library.findOne({ librarySlug, createdBy: userId })
+  const library = await Library.findOne({
+    slug: librarySlug,
+    createdBy: userId,
+  })
   if (!library) {
     return next(new AppError("Library does not exist for this user", 404))
   }
