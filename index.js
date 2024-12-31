@@ -52,7 +52,7 @@ const start = async () => {
   try {
     await connectDB(dbURI)
     server = app.listen(port, () => {
-      // console.log(`Server is listening on port ${port}`)
+      console.log(`Server is listening on port ${port}`)
     })
   } catch (error) {
     // console.error("Server error:", error.message)
