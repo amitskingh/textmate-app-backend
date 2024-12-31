@@ -5,7 +5,6 @@
   "description": "This is the text editiog app.",
   "scripts": {
     "start": "node index.js",
-    "dev": "node index.js",
     "test": "mocha --timeout 100000"
   },
   "author": "",

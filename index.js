@@ -18,10 +18,10 @@ import authRouter from "./route/auth.js"
 import authenticateUser from "./middleware/authentication.js"
 import mongoose from "mongoose"
 
-const corsOptions = {
-  origin: `${process.env.FRONTEND_URL}`, // Frontend's URL
-  credentials: true,
-}
+// const corsOptions = {
+//   origin: `${process.env.FRONTEND_URL}`, // Frontend's URL
+//   credentials: true,
+// }
 
 const app = express()
 
@@ -39,54 +39,39 @@ app.use("/api/v1/library", authenticateUser, noteRouter)
 app.use(errorHandlerMiddleware)
 app.use(notFoundMiddleware)
 
-// ------------------------------------------------------------------------------------------------
-// Database connection
+const port = process.env.PORT || 3000
+
 const dbURI =
-  process.env.NODE_ENV === "PRODUCTION"
-    ? process.env.MONGO_URI
-    : process.env.MONGO_URI_TEST
+  process.env.NODE_ENV === "test"
+    ? process.env.MONGO_URI_TEST
+    : process.env.MONGO_URI
 
-connectDB(dbURI)
+let server
 
-export default function handler(req, res) {
-  app(req, res) // Express app will handle the request and response
+const start = async () => {
+  try {
+    await connectDB(dbURI)
+    server = app.listen(port, () => {
+      // console.log(`Server is listening on port ${port}`)
+    })
+  } catch (error) {
+    // console.error("Server error:", error.message)
+    process.exit(1) // Exit the process with an error code
+  }
 }
 
-// ------------------------------------------------------------------------------------------------
+// Gracefully stop the server when tests are done
+const stop = async () => {
+  try {
+    await mongoose.connection.close() // Close DB connection
+    server.close() // Stop the server
+  } catch (error) {
+    // console.error("Error during shutdown:", error.message)
+  }
+}
 
-// const port = process.env.PORT || 3000
+start()
 
-// const dbURI =
-//   process.env.NODE_ENV === "test"
-//     ? process.env.MONGO_URI_TEST
-//     : process.env.MONGO_URI
-
-// let server
-
-// const start = async () => {
-//   try {
-//     await connectDB(dbURI)
-//     server = app.listen(port, () => {
-//       // console.log(`Server is listening on port ${port}`)
-//     })
-//   } catch (error) {
-//     // console.error("Server error:", error.message)
-//     process.exit(1) // Exit the process with an error code
-//   }
-// }
-
-// // Gracefully stop the server when tests are done
-// const stop = async () => {
-//   try {
-//     await mongoose.connection.close() // Close DB connection
-//     server.close() // Stop the server
-//   } catch (error) {
-//     // console.error("Error during shutdown:", error.message)
-//   }
-// }
-
-// start()
-
-// // Export app for testing and server stop
+// Export app for testing and server stop
 // export default app
 // export { stop }
