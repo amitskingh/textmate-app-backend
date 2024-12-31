@@ -42,9 +42,9 @@ app.use(notFoundMiddleware)
 const port = process.env.PORT || 3000
 
 const dbURI =
-  process.env.NODE_ENV === "test"
-    ? process.env.MONGO_URI_TEST
-    : process.env.MONGO_URI
+  process.env.NODE_ENV === "PRODUCTION"
+  ? process.env.MONGO_URI
+    : process.env.MONGO_URI_TEST
 
 let server
 
