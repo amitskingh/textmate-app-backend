@@ -2,6 +2,13 @@ import Note from "../model/Note.js"
 import Library from "../model/Library.js"
 import catchAsync from "../middleware/catchAsync.js"
 import AppError from "../utils/AppError.js"
+import slugify from "slugify"
+import mongoose from "mongoose"
+
+const getSlug = (noteName) => {
+  const slug = slugify(noteName, { lower: true, strict: true })
+  return slug
+}
 
 // ********************************************************************************************************
 
@@ -11,7 +18,7 @@ const getAllNotes = catchAsync(async (req, res, next) => {
 
   // Find the library by slug and userId
   const library = await Library.findOne({
-    slug: librarySlug,
+    librarySlug: librarySlug,
     createdBy: userId,
   })
 
@@ -20,26 +27,98 @@ const getAllNotes = catchAsync(async (req, res, next) => {
     return next(new AppError("Library does not exist for this user", 404))
   }
 
+  // --------------------------------------------------------
+
+  let page = 1 // Default page
+  const limit = 10 // Fixed limit
+  let sortList = [] // Default sort by libraryName asc
+
+  // Update page from query if provided
+  if (req.query.page) {
+    const parsedPage = Number(req.query.page)
+    page = Number.isInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1 // Ensure positive integer
+    console.log("Page: ", page)
+  }
+
+  // Update sort field from query if provided
+
+  if (req.query.nameOrder) {
+    console.log(req.query.nameOrder.toLowerCase())
+
+    if (req.query.nameOrder.toLowerCase() === "descending") {
+      sortList.push("-noteName")
+    } else {
+      sortList.push("noteName")
+    }
+  }
+
+  if (req.query.dateType) {
+    if (req.query.dateType.toLowerCase() === "old") {
+      sortList.push("createdAt")
+    } else {
+      sortList.push("-updatedAt")
+    }
+  }
+
+  if (sortList.length === 0) {
+    sortList.push("noteName")
+  }
+
+  let sort = sortList.map((query) => query).join(" ")
+
+  console.log(sort)
+
+  // Fetch total item count
+  const totalItems = await Note.countDocuments({
+    createdBy: userId,
+    libraryId: library._id,
+  })
+
+  const totalPages = Math.ceil(totalItems / limit)
+
+  // Handle excessive page numbers
+  if (page > totalPages && totalPages > 0) {
+    page = totalPages // Default to the last page if requested page exceeds total pages
+  }
+
+  console.log(page)
+
+  // Calculate skip value for pagination
+  const skip = (page - 1) * limit
+
   // Find notes related to the library and user
   const notes = await Note.find({ libraryId: library._id, createdBy: userId })
+    .sort(sort)
+    .skip(skip)
+    .limit(limit)
 
-  // Send response with notes data
+  console.log(limit, totalItems)
+
+  // --------------------------------------------------------
+
   res.status(200).json({
-    status: "success",
-    message: "Notes retrieved successfully",
+    success: true,
     data: notes,
+    meta: {
+      pagination: {
+        currentPage: page,
+        itemsPerPage: limit,
+        totalItems,
+        totalPages,
+      },
+    },
   })
 })
 
 // ********************************************************************************************************
 
-const getNote = catchAsync(async (req, res) => {
+const getNote = catchAsync(async (req, res, next) => {
   const { userId } = req.user
   const { librarySlug, noteSlug } = req.params
 
-  // Find the library by slug and userId
+  // Find the library by librarySlug and userId
   const library = await Library.findOne({
-    slug: librarySlug,
+    librarySlug: librarySlug,
     createdBy: userId,
   })
 
@@ -50,7 +129,7 @@ const getNote = catchAsync(async (req, res) => {
 
   // Find the note by slug and related to the specific library and user
   const note = await Note.findOne({
-    slug: noteSlug,
+    noteSlug: noteSlug,
     libraryId: library._id,
     createdBy: userId,
   })
@@ -76,11 +155,15 @@ const createNote = catchAsync(async (req, res, next) => {
   const { noteName } = req.body
   const { librarySlug } = req.params
 
+  console.log(userId, noteName, librarySlug)
+
   // validate library slug
   const library = await Library.findOne({
-    slug: librarySlug,
+    librarySlug: librarySlug,
     createdBy: userId,
   })
+
+  console.log(library)
 
   if (!library) {
     return next(new AppError("Library does not exist for this user", 404))
@@ -99,11 +182,22 @@ const createNote = catchAsync(async (req, res, next) => {
     )
   }
 
+  const noteSlug = getSlug(noteName)
   const note = await Note.create({
     noteName,
+    noteSlug,
     libraryId: library._id,
+    librarySlug: library.librarySlug,
     createdBy: userId,
   })
+
+  await Library.findOneAndUpdate(
+    { librarySlug: librarySlug },
+    { $inc: { fileCount: 1 } },
+    { new: true } // Return the updated document after increment
+  )
+
+  console.log("Note: ", note)
 
   res.status(201).json({
     status: "success",
@@ -121,7 +215,7 @@ const updateNote = catchAsync(async (req, res, next) => {
 
   // Find the library to ensure it exists and belongs to the current user
   const library = await Library.findOne({
-    slug: librarySlug,
+    librarySlug: librarySlug,
     createdBy: userId,
   })
 
@@ -129,10 +223,12 @@ const updateNote = catchAsync(async (req, res, next) => {
     return next(new AppError("Library does not exist for this user", 404))
   }
 
+  console.log(library)
+
   // Find and update the note in the specified library
   const note = await Note.findOneAndUpdate(
     {
-      slug: noteSlug, // Matching by slug (assuming slug is unique per user and library)
+      noteSlug: noteSlug, // Matching by slug (assuming slug is unique per user and library)
       libraryId: library._id,
       createdBy: userId,
     },
@@ -157,13 +253,15 @@ const updateNote = catchAsync(async (req, res, next) => {
   })
 })
 
+// ********************************************************************************************************
+
 const deleteNote = catchAsync(async (req, res, next) => {
   const { userId } = req.user
   const { librarySlug, noteSlug } = req.params
 
   // Validate library slug
   const library = await Library.findOne({
-    slug: librarySlug,
+    librarySlug: librarySlug,
     createdBy: userId,
   })
 
@@ -173,13 +271,15 @@ const deleteNote = catchAsync(async (req, res, next) => {
 
   // Validate note by noteSlug and ensure it belongs to the correct user and library
   const note = await Note.findOne({
-    slug: noteSlug,
+    noteSlug: noteSlug,
     libraryId: library._id,
     createdBy: userId,
   })
 
   if (!note) {
-    return next(new AppError("Note does not exits for this user", 404))
+    return next(
+      new AppError("Note does not exist in this library for the user", 404)
+    )
   }
 
   // Start a transaction
@@ -189,7 +289,7 @@ const deleteNote = catchAsync(async (req, res, next) => {
   try {
     // Delete the note by slug, user and library reference
     const noteToDelete = await Note.findOneAndDelete({
-      slug: noteSlug,
+      noteSlug: noteSlug,
       createdBy: userId,
       libraryId: library._id,
     }).session(session)
@@ -197,6 +297,13 @@ const deleteNote = catchAsync(async (req, res, next) => {
     if (!noteToDelete) {
       throw new AppError("Note deletion failed", 400)
     }
+
+    // Decrement fileCount in the library after deletion
+    await Library.findByIdAndUpdate(
+      library._id, // Use library._id for more reliable query
+      { $inc: { fileCount: -1 } },
+      { new: true } // Return the updated document after increment
+    ).session(session)
 
     // Commit transaction
     await session.commitTransaction()
@@ -234,7 +341,7 @@ const renameNote = catchAsync(async (req, res, next) => {
 
   // Find the library to ensure it exists and belongs to the current user
   const library = await Library.findOne({
-    slug: librarySlug,
+    librarySlug: librarySlug,
     createdBy: userId,
   })
 
@@ -242,15 +349,22 @@ const renameNote = catchAsync(async (req, res, next) => {
     return next(new AppError("Library does not exist for this user", 404))
   }
 
-  // Find the note to ensure it exists in the correct library and is created by the current user
   const note = await Note.findOne({
-    slug: noteSlug,
+    noteSlug: noteSlug,
     libraryId: library._id,
     createdBy: userId,
   })
 
-  if (!note) {
-    return next(new AppError("Note does not exist or not authorized", 404))
+  const newNoteSlug = getSlug(noteName)
+  // Find the note to ensure it exists in the correct library and is created by the current user
+  const existingNote = await Note.findOne({
+    noteSlug: newNoteSlug,
+    libraryId: library._id,
+    createdBy: userId,
+  })
+
+  if (existingNote && !existingNote._id.equals(note._id)) {
+    return next(new AppError("Note with same name already exists!", 400))
   }
 
   // Update the note's name

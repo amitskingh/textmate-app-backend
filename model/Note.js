@@ -10,12 +10,13 @@ const NoteSchema = new mongoose.Schema(
       minlength: 1,
       maxlength: 50,
     },
-    slug: {
+    noteSlug: {
       type: String,
       required: true, // Slug is required for routing
     },
     content: {
       type: String,
+      default: "[]",
     },
     libraryId: {
       type: mongoose.Types.ObjectId,
@@ -34,16 +35,7 @@ const NoteSchema = new mongoose.Schema(
 // Compound index to ensure noteName is unique per user within a library
 NoteSchema.index({ noteName: 1, libraryId: 1, createdBy: 1 }, { unique: true })
 
-// Add an index for slug to optimize lookups
-NoteSchema.index({ slug: 1, libraryId: 1 }, { unique: true })
-
-// Middleware to generate slug before saving
-NoteSchema.pre("save", function (next) {
-  if (this.isModified("noteName")) {
-    // If noteName is modified, generate a new slug
-    this.slug = slugify(this.noteName, { lower: true, strict: true })
-  }
-  next()
-})
+// Add an index for noteSlug to optimize lookups
+NoteSchema.index({ noteSlug: 1, libraryId: 1 }, { unique: true })
 
 export default mongoose.model("Note", NoteSchema)

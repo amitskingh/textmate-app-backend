@@ -25,7 +25,7 @@ import mongoose from "mongoose"
 
 const app = express()
 
-// app.use(cors(corsOptions))
+app.use(cors())
 app.use(helmet())
 app.use(xss())
 app.use(cookieParser())

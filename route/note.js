@@ -10,12 +10,12 @@ import {
   renameNote,
 } from "../controller/note.js"
 
-router.route("/:librarySlug/notes").get(getAllNotes).post(createNote)
+router.route("/:librarySlug/note").get(getAllNotes).post(createNote)
 router
-  .route("/:librarySlug/notes/:noteSlug")
+  .route("/:librarySlug/note/:noteSlug")
   .get(getNote)
   .delete(deleteNote)
   .patch(updateNote)
-router.route("/:librarySlug/notes/:noteSlug/rename").put(renameNote)
+router.route("/:librarySlug/note/:noteSlug/rename").put(renameNote)
 
 export default router

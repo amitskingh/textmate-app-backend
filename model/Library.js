@@ -1,5 +1,4 @@
 import mongoose from "mongoose"
-import slugify from "slugify"
 
 const LibrarySchema = new mongoose.Schema(
   {
@@ -14,13 +13,23 @@ const LibrarySchema = new mongoose.Schema(
         "Library name can only contain alphabets, numbers, and spaces",
       ],
     },
-    slug: {
+    librarySlug: {
       type: String,
+      required: true,
     },
     createdBy: {
       type: mongoose.Types.ObjectId,
       ref: "User",
       required: true, // Ensures the library is tied to a user
+    },
+    fileType: {
+      type: "String",
+      default: "library",
+      immutable: true, // Makes the creation date unchangeable
+    },
+    fileCount: {
+      type: Number,
+      default: 0,
     },
   },
   { timestamps: true }
@@ -29,16 +38,7 @@ const LibrarySchema = new mongoose.Schema(
 // Compound index to ensure libraryName is unique per user
 LibrarySchema.index({ libraryName: 1, createdBy: 1 }, { unique: true })
 
-// Add an index for slug to optimize lookups
-LibrarySchema.index({ slug: 1, createdBy: 1 }, { unique: true })
-
-// Middleware to generate slug before saving
-LibrarySchema.pre("save", function (next) {
-  if (this.isModified("libraryName")) {
-    // If libraryName is modified, generate a new slug
-    this.slug = slugify(this.libraryName, { lower: true, strict: true })
-  }
-  next()
-})
+// Add an index for librarySlug to optimize lookups
+LibrarySchema.index({ librarySlug: 1, createdBy: 1 }, { unique: true })
 
 export default mongoose.model("Library", LibrarySchema)

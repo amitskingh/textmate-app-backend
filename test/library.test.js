@@ -48,10 +48,10 @@ describe("LIBRARY API TEST", () => {
 
       // Assertions
       expect(res.status).to.equal(201) // Library should be created successfully
-      expect(res.body).to.have.property("data").to.have.property("slug")
+      expect(res.body).to.have.property("data").to.have.property("librarySlug")
       expect(res.body).to.have.property("data").to.have.property("libraryName")
 
-      USER1.librarySlug = res.body.data.slug
+      USER1.librarySlug = res.body.data.librarySlug
     })
 
     it("should create a new library for USER2", async () => {
@@ -66,10 +66,10 @@ describe("LIBRARY API TEST", () => {
 
       // Assertions
       expect(res.status).to.equal(201) // Library should be created successfully
-      expect(res.body).to.have.property("data").to.have.property("slug")
+      expect(res.body).to.have.property("data").to.have.property("librarySlug")
       expect(res.body).to.have.property("data").to.have.property("libraryName")
 
-      USER2.librarySlug = res.body.data.slug
+      USER2.librarySlug = res.body.data.librarySlug
     })
 
     it("should be able create a new library with same libraryName as of USER1 for USER2", async () => {
@@ -84,7 +84,7 @@ describe("LIBRARY API TEST", () => {
 
       // Assertions
       expect(res.status).to.equal(201) // Library should be created successfully
-      expect(res.body).to.have.property("data").to.have.property("slug")
+      expect(res.body).to.have.property("data").to.have.property("librarySlug")
       expect(res.body).to.have.property("data").to.have.property("libraryName")
     })
 
@@ -162,7 +162,7 @@ describe("LIBRARY API TEST", () => {
       expect(res.body).to.have.property("data")
       expect(res.body)
         .to.have.property("data")
-        .to.have.property("slug")
+        .to.have.property("librarySlug")
         .to.equal(USER1.librarySlug)
     })
 

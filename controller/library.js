@@ -1,9 +1,14 @@
 import mongoose from "mongoose"
 import slugify from "slugify"
+import catchAsync from "../middleware/catchAsync.js"
 import Library from "../model/Library.js"
 import Note from "../model/Note.js"
-import catchAsync from "../middleware/catchAsync.js"
 import AppError from "../utils/AppError.js"
+
+const getSlug = (libraryName) => {
+  const slug = slugify(libraryName, { lower: true, strict: true })
+  return slug
+}
 
 // ********************************************************************************************************
 
@@ -11,16 +16,79 @@ import AppError from "../utils/AppError.js"
 const getAllLibrary = catchAsync(async (req, res, next) => {
   const { userId } = req.user
 
-  const libraries = await Library.find({ createdBy: userId })
+  let page = 1 // Default page
+  const limit = 10 // Fixed limit
+  let sortList = [] // Default sort by libraryName asc
 
-  if (!libraries || libraries.length === 0) {
-    return next(new AppError("No libraries found for this user", 404))
+  // Update page from query if provided
+  if (req.query.page) {
+    const parsedPage = Number(req.query.page)
+    page = Number.isInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1 // Ensure positive integer
   }
 
+  // Update sort field from query if provided
+
+  if (req.query.nameOrder) {
+    console.log(req.query.nameOrder.toLowerCase())
+
+    if (req.query.nameOrder.toLowerCase() === "descending") {
+      sortList.push("-libraryName")
+    } else {
+      sortList.push("libraryName")
+    }
+  }
+
+  if (req.query.dateType) {
+    if (req.query.dateType.toLowerCase() === "old") {
+      sortList.push("createdAt")
+    } else {
+      sortList.push("-updatedAt")
+    }
+  }
+
+  if (sortList.length === 0) {
+    sortList.push("libraryName")
+  }
+
+  let sort = sortList.map((query) => query).join(" ")
+
+  console.log(sort)
+
+  // Fetch total item count
+  const totalItems = await Library.countDocuments({ createdBy: userId })
+
+  const totalPages = Math.ceil(totalItems / limit)
+
+  // Handle excessive page numbers
+  if (page > totalPages && totalPages > 0) {
+    page = totalPages // Default to the last page if requested page exceeds total pages
+  }
+
+  // Calculate skip value for pagination
+  const skip = (page - 1) * limit
+
+  // Fetch data from the database with fixed limit and dynamic sort
+  const libraries = await Library.find({ createdBy: userId })
+    .sort(sort)
+    .skip(skip)
+    .limit(limit)
+
+  // if (!libraries || libraries.length === 0) {
+  //   return next(new AppError("No libraries found for this user", 404))
+  // }
+
+  // Response with libraries and pagination metadata
   res.status(200).json({
-    status: "success",
-    message: "Libraries retrieved successfully",
+    success: true,
     data: libraries,
+    meta: {
+      pagination: {
+        currentPage: page,
+        itemsPerPage: limit,
+        totalItems,
+        totalPages,
+      },
+    },
   })
 })
 
@@ -56,8 +124,10 @@ const createLibrary = catchAsync(async (req, res, next) => {
   }
 
   // Create the library
+  const librarySlug = getSlug(libraryName)
   const library = await Library.create({
     libraryName: libraryName,
+    librarySlug: librarySlug,
     createdBy: userId,
   })
 
@@ -75,13 +145,12 @@ const deleteLibrary = catchAsync(async (req, res, next) => {
   const { librarySlug } = req.params
   const { userId } = req.user
 
-  console.log(librarySlug)
-
   // Validate the librarySlug and find the library
   const library = await Library.findOne({
-    slug: librarySlug,
+    librarySlug: librarySlug,
     createdBy: userId,
   })
+
   if (!library) {
     return next(new AppError("Library does not exist for this user", 404))
   }
@@ -93,7 +162,7 @@ const deleteLibrary = catchAsync(async (req, res, next) => {
   try {
     // Delete the library by librarySlug and user
     const libraryToDelete = await Library.findOneAndDelete({
-      slug: librarySlug,
+      librarySlug: librarySlug,
       createdBy: userId,
     }).session(session)
 
@@ -145,7 +214,7 @@ const renameLibrary = catchAsync(async (req, res, next) => {
 
   // Find the library to ensure it exists and belongs to the current user
   const library = await Library.findOne({
-    slug: librarySlug,
+    librarySlug: librarySlug,
     createdBy: userId,
   })
 
@@ -153,21 +222,22 @@ const renameLibrary = catchAsync(async (req, res, next) => {
     return next(new AppError("Library does not exist for the user", 404))
   }
 
-  // Generate a new slug for the updated name
-  const newSlug = slugify(this.libraryName, { lower: true, strict: true })
+  // Generate a new librarySlug for the updated name
+  const newSlug = slugify(libraryName, { lower: true, strict: true })
 
-  // Check if a library with the same name or slug already exists for the user
+  // Check if a library with the same name or librarySlug already exists for the user
   const existingLibrary = await Library.findOne({
-    slug: newSlug,
+    librarySlug: newSlug,
     createdBy: userId,
   })
 
-  if (existingLibrary) {
+  if (existingLibrary && !existingLibrary._id.equals(library._id)) {
     return next(new AppError("A library with this name already exists", 400))
   }
 
   // Update the library name and slug
-  library.libraryName = libraryName // slug will be saved using the preSave present in schema
+  library.libraryName = libraryName
+  library.librarySlug = newSlug
 
   await library.save()
 
@@ -179,4 +249,4 @@ const renameLibrary = catchAsync(async (req, res, next) => {
   })
 })
 
-export { getAllLibrary, createLibrary, deleteLibrary, renameLibrary }
+export { createLibrary, deleteLibrary, getAllLibrary, renameLibrary }
