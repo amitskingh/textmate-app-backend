@@ -6,7 +6,6 @@ dotenv.config()
 import cors from "cors"
 import cookieParser from "cookie-parser"
 import helmet from "helmet"
-import xss from "xss-clean"
 
 import errorHandlerMiddleware from "./middleware/errorHandler.js"
 import notFoundMiddleware from "./middleware/notFound.js"
@@ -25,9 +24,9 @@ const corsOptions = {
 
 const app = express()
 
-app.use(cors())
+// app.use(cors())
+app.use(cors(corsOptions))
 app.use(helmet())
-app.use(xss())
 app.use(cookieParser())
 app.use(express.json())
 
