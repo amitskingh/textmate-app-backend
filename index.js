@@ -1,41 +1,45 @@
 import express from "express"
-import connectDB from "../config/db.js"
+import connectDB from "./config/db.js"
+import "express-async-errors"
 import dotenv from "dotenv"
+dotenv.config()
 import cors from "cors"
 import cookieParser from "cookie-parser"
 import helmet from "helmet"
 import xss from "xss-clean"
+
+import errorHandlerMiddleware from "./middleware/errorHandler.js"
+import notFoundMiddleware from "./middleware/notFound.js"
+
+// routes
+import libraryRouter from "./route/library.js"
+import noteRouter from "./route/note.js"
+import authRouter from "./route/auth.js"
+import authenticateUser from "./middleware/authentication.js"
 import mongoose from "mongoose"
 
-import errorHandlerMiddleware from "../middleware/errorHandler.js"
-import notFoundMiddleware from "../middleware/notFound.js"
-
-import libraryRouter from "../route/library.js"
-import noteRouter from "../route/note.js"
-import authRouter from "../route/auth.js"
-import authenticateUser from "../middleware/authentication.js"
-
-dotenv.config()
+// const corsOptions = {
+//   origin: `${process.env.FRONTEND_URL}`, // Frontend's URL
+//   credentials: true,
+// }
 
 const app = express()
 
-// Middleware setup
 app.use(cors())
 app.use(helmet())
 app.use(xss())
 app.use(cookieParser())
 app.use(express.json())
 
-// Routes
 app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/profile", authenticateUser, authRouter)
 app.use("/api/v1/library", authenticateUser, libraryRouter)
 app.use("/api/v1/library", authenticateUser, noteRouter)
 
-// Error handling
 app.use(errorHandlerMiddleware)
 app.use(notFoundMiddleware)
 
+// ------------------------------------------------------------------------------------------------
 // Database connection
 const dbURI =
   process.env.NODE_ENV === "PRODUCTION"
@@ -47,3 +51,42 @@ connectDB(dbURI)
 export default function handler(req, res) {
   app(req, res) // Express app will handle the request and response
 }
+
+// ------------------------------------------------------------------------------------------------
+
+// const port = process.env.PORT || 3000
+
+// const dbURI =
+//   process.env.NODE_ENV === "test"
+//     ? process.env.MONGO_URI_TEST
+//     : process.env.MONGO_URI
+
+// let server
+
+// const start = async () => {
+//   try {
+//     await connectDB(dbURI)
+//     server = app.listen(port, () => {
+//       // console.log(`Server is listening on port ${port}`)
+//     })
+//   } catch (error) {
+//     // console.error("Server error:", error.message)
+//     process.exit(1) // Exit the process with an error code
+//   }
+// }
+
+// // Gracefully stop the server when tests are done
+// const stop = async () => {
+//   try {
+//     await mongoose.connection.close() // Close DB connection
+//     server.close() // Stop the server
+//   } catch (error) {
+//     // console.error("Error during shutdown:", error.message)
+//   }
+// }
+
+// start()
+
+// // Export app for testing and server stop
+// export default app
+// export { stop }

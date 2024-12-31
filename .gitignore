@@ -2,3 +2,4 @@ node_modules
 populate.js
 .env
 testPopulate.js
+.vercel
