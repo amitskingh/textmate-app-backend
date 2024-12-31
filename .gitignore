@@ -1,5 +1,5 @@
 node_modules
-populate.js
 .env
+populate.js
 testPopulate.js
 .vercel
