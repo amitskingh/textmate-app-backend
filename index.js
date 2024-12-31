@@ -52,10 +52,10 @@ const start = async () => {
   try {
     await connectDB(dbURI)
     server = app.listen(port, () => {
-      console.log(`Server is listening on port ${port}`)
+      // console.log(`Server is listening on port ${port}`)
     })
   } catch (error) {
-    console.error("Server error:", error.message)
+    // console.error("Server error:", error.message)
     process.exit(1) // Exit the process with an error code
   }
 }
@@ -66,7 +66,7 @@ const stop = async () => {
     await mongoose.connection.close() // Close DB connection
     server.close() // Stop the server
   } catch (error) {
-    console.error("Error during shutdown:", error.message)
+    // console.error("Error during shutdown:", error.message)
   }
 }
 

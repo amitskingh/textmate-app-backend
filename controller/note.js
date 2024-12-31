@@ -37,13 +37,13 @@ const getAllNotes = catchAsync(async (req, res, next) => {
   if (req.query.page) {
     const parsedPage = Number(req.query.page)
     page = Number.isInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1 // Ensure positive integer
-    console.log("Page: ", page)
+    // console.log("Page: ", page)
   }
 
   // Update sort field from query if provided
 
   if (req.query.nameOrder) {
-    console.log(req.query.nameOrder.toLowerCase())
+    // console.log(req.query.nameOrder.toLowerCase())
 
     if (req.query.nameOrder.toLowerCase() === "descending") {
       sortList.push("-noteName")
@@ -66,7 +66,7 @@ const getAllNotes = catchAsync(async (req, res, next) => {
 
   let sort = sortList.map((query) => query).join(" ")
 
-  console.log(sort)
+  // console.log(sort)
 
   // Fetch total item count
   const totalItems = await Note.countDocuments({
@@ -81,7 +81,7 @@ const getAllNotes = catchAsync(async (req, res, next) => {
     page = totalPages // Default to the last page if requested page exceeds total pages
   }
 
-  console.log(page)
+  // console.log(page)
 
   // Calculate skip value for pagination
   const skip = (page - 1) * limit
@@ -92,7 +92,7 @@ const getAllNotes = catchAsync(async (req, res, next) => {
     .skip(skip)
     .limit(limit)
 
-  console.log(limit, totalItems)
+  // console.log(limit, totalItems)
 
   // --------------------------------------------------------
 
@@ -155,7 +155,7 @@ const createNote = catchAsync(async (req, res, next) => {
   const { noteName } = req.body
   const { librarySlug } = req.params
 
-  console.log(userId, noteName, librarySlug)
+  // console.log(userId, noteName, librarySlug)
 
   // validate library slug
   const library = await Library.findOne({
@@ -163,7 +163,7 @@ const createNote = catchAsync(async (req, res, next) => {
     createdBy: userId,
   })
 
-  console.log(library)
+  // console.log(library)
 
   if (!library) {
     return next(new AppError("Library does not exist for this user", 404))
@@ -197,7 +197,7 @@ const createNote = catchAsync(async (req, res, next) => {
     { new: true } // Return the updated document after increment
   )
 
-  console.log("Note: ", note)
+  // console.log("Note: ", note)
 
   res.status(201).json({
     status: "success",
@@ -223,7 +223,7 @@ const updateNote = catchAsync(async (req, res, next) => {
     return next(new AppError("Library does not exist for this user", 404))
   }
 
-  console.log(library)
+  // console.log(library)
 
   // Find and update the note in the specified library
   const note = await Note.findOneAndUpdate(

@@ -35,7 +35,7 @@ const errorHandler = (err, req, res, next) => {
     statusCode = 400
   }
 
-  console.log(message, statusCode)
+  // console.log(message, statusCode)
 
   res.status(statusCode).json({
     statusCode: statusCode,

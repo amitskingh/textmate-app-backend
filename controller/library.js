@@ -29,7 +29,7 @@ const getAllLibrary = catchAsync(async (req, res, next) => {
   // Update sort field from query if provided
 
   if (req.query.nameOrder) {
-    console.log(req.query.nameOrder.toLowerCase())
+    // console.log(req.query.nameOrder.toLowerCase())
 
     if (req.query.nameOrder.toLowerCase() === "descending") {
       sortList.push("-libraryName")
@@ -52,7 +52,7 @@ const getAllLibrary = catchAsync(async (req, res, next) => {
 
   let sort = sortList.map((query) => query).join(" ")
 
-  console.log(sort)
+  // console.log(sort)
 
   // Fetch total item count
   const totalItems = await Library.countDocuments({ createdBy: userId })
