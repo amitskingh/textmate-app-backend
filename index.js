@@ -6,6 +6,7 @@ dotenv.config()
 import cors from "cors"
 import cookieParser from "cookie-parser"
 import helmet from "helmet"
+import { rateLimit } from "express-rate-limit"
 
 import errorHandlerMiddleware from "./middleware/errorHandler.js"
 import notFoundMiddleware from "./middleware/notFound.js"
@@ -24,6 +25,12 @@ const corsOptions = {
 
 const app = express()
 
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 60,
+  })
+)
 // app.use(cors())
 app.use(cors(corsOptions))
 app.use(helmet())
