@@ -42,9 +42,9 @@ app.use(notFoundMiddleware)
 const port = process.env.PORT || 3000
 
 const dbURI =
-  process.env.NODE_ENV === "test"
-    ? process.env.MONGO_URI_TEST
-    : process.env.MONGO_URI
+  process.env.NODE_ENV === "PRODUCTION"
+    ? process.env.MONGO_URI
+    : process.env.MONGO_URI_TEST
 
 let server
 
@@ -62,7 +62,6 @@ const start = async () => {
 
 start()
 
-
 // Gracefully stop the server when tests are done
 const stop = async () => {
   try {
@@ -72,7 +71,6 @@ const stop = async () => {
     // console.error("Error during shutdown:", error.message)
   }
 }
-
 
 // Export app for testing and server stop
 // export default app
