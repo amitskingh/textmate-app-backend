@@ -18,10 +18,10 @@ import authRouter from "./route/auth.js"
 import authenticateUser from "./middleware/authentication.js"
 import mongoose from "mongoose"
 
-// const corsOptions = {
-//   origin: `${process.env.FRONTEND_URL}`, // Frontend's URL
-//   credentials: true,
-// }
+const corsOptions = {
+  origin: `${process.env.FRONTEND_URL}`, // Frontend's URL
+  credentials: true,
+}
 
 const app = express()
 
@@ -60,6 +60,9 @@ const start = async () => {
   }
 }
 
+start()
+
+
 // Gracefully stop the server when tests are done
 const stop = async () => {
   try {
@@ -70,7 +73,6 @@ const stop = async () => {
   }
 }
 
-start()
 
 // Export app for testing and server stop
 // export default app
