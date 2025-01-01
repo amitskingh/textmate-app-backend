@@ -1,4 +1,3 @@
-Here's the updated version with a link to the frontend added:  
 
 ---
 
@@ -30,7 +29,7 @@ Here's the updated version with a link to the frontend added:
    - Optimized MongoDB queries with proper indexing for enhanced performance during search operations.  
 
 4. **Filters:**  
-   - Comprehensive filtering options, including sorting by name (A-Z, Z-A) and last modified.  
+   - Comprehensive filtering options, including sorting by name (A-Z, Z-A) and by date (old, recent).  
 
 5. **Search Functionality:**  
    - Search libraries and notes by name for quick access.  
@@ -42,5 +41,3 @@ Here's the updated version with a link to the frontend added:
    - Unit tests implemented with Mocha to ensure code reliability and robustness.  
 
 ---
-
-Would you like me to add a specific URL for the frontend link or make any additional edits?
